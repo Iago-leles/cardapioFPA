@@ -3,134 +3,140 @@ using System.Windows.Forms;
 
 class Program
 {
-    static int k;
-    static int n;
-    static int m;
-    static int[,] dishes;
-    static TextBox[] costBoxes;
-    static TextBox[] profitBoxes;
+    static int k; //(dias)
+    static int n; //(pratos)
+    static int m; //(orçamento)
+    static int[,] pratos;
+    static TextBox[] custoBox;
+    static TextBox[] lucroBox;
 
-    static void Main(string[] args)
+    static void Main(string[] args) // o programa inicia aqui
     {
-        Application.Run(new MainForm());
-    }
+        Application.Run(new MainForm()); // ele chama esse método para iniciar a aplicação 
+    }                                       //e exibe a janela do formulário principal
 
     static void CalculateMenu()
     {
-        int[,] dp = new int[k + 1, m + 1];
-        int[,] lastDish = new int[k + 1, m + 1];
+        int[,] lucroMaxParc = new int[k + 1, m + 1]; // é criada essa matriz para armazenar os lucros parciais do calculo
+        int[,] ultPrato = new int[k + 1, m + 1]; // é criada essa outra matriz para rastrear qual prato foi escolhido em cada dia para atingir
+                                                 // o lucro máximo
 
-        for (int i = 1; i <= n; i++)
+        for (int i = 1; i <= n; i++) // aqui é feito um loop para preencher a matriz 'pratos' com os valores de custo e lucro inseridos pelo usuário
         {
-            int cost = int.Parse(costBoxes[i - 1].Text);
-            int profit = int.Parse(profitBoxes[i - 1].Text);
+            int custo = int.Parse(custoBox[i - 1].Text); // pega o valor do input custo e adiciona a variavel custo
+            int lucro = int.Parse(lucroBox[i - 1].Text);// pega o valor do input lucro e adiciona a variavel lucro
 
-            dishes[i, 0] = cost;
-            dishes[i, 1] = profit;
+            pratos[i, 0] = custo;   // adiciona o valor do custo na linha do prato n
+            pratos[i, 1] = lucro;   // adiciona o valor de lucro na linha do prato n
         }
 
-        for (int i = 1; i <= k; i++)
+        for (int i = 1; i <= k; i++) // esse loop percorre cada dia do menu (de 1 a k)
         {
-            for (int j = 0; j <= m; j++)
-            {
-                dp[i, j] = dp[i - 1, j];
-                lastDish[i, j] = -1;
+            for (int j = 0; j <= m; j++)            // itera sobre os valores de orçamento disponíveis para cada dia do menu
+            {                                        // aqui estamos verificando todas as opções de orçamento possíveis para cada dia.
 
-                for (int dish = 1; dish <= n; dish++)
+                lucroMaxParc[i, j] = lucroMaxParc[i - 1, j]; // atribui o valor do lucro do dia anterior para o dia atual.
+                                                         // Isso ocorre porque estamos considerando a possibilidade de não escolher
+                                                         // nenhum prato adicional para o dia atual e, portanto, o lucro será o mesmo do dia anterior.
+                ultPrato[i, j] = -1;    //atribui o valor -1 à matriz ultPrato, indicando que nenhum prato foi
+                                        //escolhido até o momento para o dia e orçamento atual.
+
+                for (int prato = 1; prato <= n; prato++) // itera sobre os pratos disponiveis
                 {
-                    int cost = dishes[dish, 0];
-                    int profit = dishes[dish, 1];
+                    int custo = pratos[prato, 0]; // obtem o custo do prato atual do array pratos
+                    int lucro = pratos[prato, 1]; // obtem o lucro do prato atual do array pratos
 
-                    if (cost <= j && lastDish[i - 1, j - cost] != dish)
-                    {
-                        dp[i, j] = Math.Max(dp[i, j], dp[i - 1, j - cost] + profit);
+                    if (custo <= j && ultPrato[i - 1, j - custo] != prato) // verifica se é possível escolher o prato atual com o orçamento disponivel
+                    {                                                       // e se ele não foi escolhido no dia anterior com o mesmo orçamento
+                        lucroMaxParc[i, j] = Math.Max(lucroMaxParc[i, j], lucroMaxParc[i - 1, j - custo] + lucro);
 
-                        if (dp[i, j] == dp[i - 1, j - cost] + profit)
+                        if (lucroMaxParc[i, j] == lucroMaxParc[i - 1, j - custo] + lucro)
                         {
-                            lastDish[i, j] = dish;
+                            ultPrato[i, j] = prato;
                         }
                     }
+
                 }
             }
         }
 
-        double maxProfit = dp[k, m];
-        string result = $"Lucro total R${maxProfit:F1}\n";
+        double maxProfit = lucroMaxParc[k, m];
+        string resultado = $"Lucro total R${maxProfit:F1}\n";
 
         int[] menu = new int[k];
-        int remainingBudget = m;
-        int currentDay = k;
+        int orcamentoRestante = m;
+        int diaAtual = k;
 
         
-        while (currentDay > 0 && remainingBudget > 0)
+        while (diaAtual > 0 && orcamentoRestante > 0)
         {
-            int dish = lastDish[currentDay, remainingBudget];
-            menu[currentDay - 1] = dish;
-            remainingBudget -= dishes[dish, 0];
-            currentDay--;
+            int dish = ultPrato[diaAtual, orcamentoRestante];
+            menu[diaAtual - 1] = dish;
+            orcamentoRestante -= pratos[dish, 0];
+            diaAtual--;
         }
 
         for (int i = 0; i < k; i++)
         {
-            result += $"Dia {i + 1}: Prato {menu[i]}\n";
+            resultado += $"Dia {i + 1}: Prato {menu[i]}\n";
         }
 
 
-        MessageBox.Show(result, "Resultado");
+        MessageBox.Show(resultado, "Resultado");
     }
 
     public class MainForm : Form
     {
-        private Label daysLabel;
-        private TextBox daysTextBox;
-        private Label dishesLabel;
-        private TextBox dishesTextBox;
-        private Label budgetLabel;
-        private TextBox budgetTextBox;
+        private Label diasLabel;
+        private TextBox diasTextBox;
+        private Label pratosLabel;
+        private TextBox pratosTextBox;
+        private Label orcamentoLabel;
+        private TextBox orcamentoTextBox;
         private Button submitButton;
-        private Label[] costLabels;
-        private Label[] profitLabels;
+        private Label[] custoLabels;
+        private Label[] lucroLabels;
         private Button calculateButton;
 
-        public MainForm()
+        public MainForm() // esse componente chama outra função
         {
             InitializeComponents();
         }
 
-        private void InitializeComponents()
+        private void InitializeComponents() // aqui é feito a construção da interface 
         {
-            daysLabel = new Label
+            diasLabel = new Label
             {
                 Text = "Número de dias:",
                 Location = new System.Drawing.Point(10, 10),
                 AutoSize = true
             };
 
-            daysTextBox = new TextBox
+            diasTextBox = new TextBox
             {
                 Location = new System.Drawing.Point(150, 10)
             };
 
-            dishesLabel = new Label
+            pratosLabel = new Label
             {
                 Text = "Número de pratos:",
                 Location = new System.Drawing.Point(10, 40),
                 AutoSize = true
             };
 
-            dishesTextBox = new TextBox
+            pratosTextBox = new TextBox
             {
                 Location = new System.Drawing.Point(150, 40)
             };
 
-            budgetLabel = new Label
+            orcamentoLabel = new Label
             {
                 Text = "Orçamento:",
                 Location = new System.Drawing.Point(10, 70),
                 AutoSize = true
             };
 
-            budgetTextBox = new TextBox
+            orcamentoTextBox = new TextBox
             {
                 Location = new System.Drawing.Point(150, 70)
             };
@@ -142,60 +148,76 @@ class Program
                 DialogResult = DialogResult.OK
             };
 
-            submitButton.Click += SubmitButton_Click;
+            submitButton.Click += SubmitButton_Click;  // É acionado o método SubmitButton_Click
 
-            Controls.Add(daysLabel);
-            Controls.Add(daysTextBox);
-            Controls.Add(dishesLabel);
-            Controls.Add(dishesTextBox);
-            Controls.Add(budgetLabel);
-            Controls.Add(budgetTextBox);
+            Controls.Add(diasLabel);
+            Controls.Add(diasTextBox);
+            Controls.Add(pratosLabel);
+            Controls.Add(pratosTextBox);
+            Controls.Add(orcamentoLabel);
+            Controls.Add(orcamentoTextBox);
             Controls.Add(submitButton);
+
+            //Essas linhas de código (Controls.Add) estão configurando a interface de entrada de dados
+            //para o usuário, permitindo que ele insira o número de dias, o número de pratos e
+            //o orçamento. O botão de envio será usado para continuar com o
+            //cálculo com base nessas entradas.
         }
 
-        private void SubmitButton_Click(object sender, EventArgs e)
+        private void SubmitButton_Click(object sender, EventArgs e) //esses parametros são necessarios para lidar com eventos de clique no botão
         {
-            k = int.Parse(daysTextBox.Text);
-            n = int.Parse(dishesTextBox.Text);
-            m = int.Parse(budgetTextBox.Text);
+            // abaixo os valores inseridos nos campos de texto são obtidos e armazenados nas
+            // variáveis k(dias), n(pratos) e m(orçamento)
 
-            Controls.Clear();
+            k = int.Parse(diasTextBox.Text);
+            n = int.Parse(pratosTextBox.Text);
+            m = int.Parse(orcamentoTextBox.Text);
+                
+            
+            Controls.Clear(); //os controles da interface são removidas para ser 
+                                // adicionado os próximos necessários
 
-            costLabels = new Label[n];
-            profitLabels = new Label[n];
-            costBoxes = new TextBox[n];
-            profitBoxes = new TextBox[n];
+            // são criado quatro arrays para para armazenar as labels e
+            // os inputs dos custos e lucros de cada prato
 
-            for (int i = 0; i < n; i++)
-            {
-                costLabels[i] = new Label
+            custoLabels = new Label[n];
+            lucroLabels = new Label[n];
+            custoBox = new TextBox[n];
+            lucroBox = new TextBox[n];
+
+            for (int i = 0; i < n; i++) // renderiza de acordo com a quantidade de pratos que o usuário informou
+            {                   
+                custoLabels[i] = new Label
                 {
                     Text = $"Custo do prato {i + 1}:",
                     Location = new System.Drawing.Point(10, 10 + 60 * i),
                     AutoSize = true
                 };
 
-                profitLabels[i] = new Label
+                lucroLabels[i] = new Label
                 {
                     Text = $"Lucro do prato {i + 1}:",
                     Location = new System.Drawing.Point(10, 40 + 60 * i),
                     AutoSize = true
                 };
 
-                costBoxes[i] = new TextBox
+                custoBox[i] = new TextBox
                 {
                     Location = new System.Drawing.Point(150, 10 + 60 * i)
                 };
 
-                profitBoxes[i] = new TextBox
+                lucroBox[i] = new TextBox
                 {
                     Location = new System.Drawing.Point(150, 40 + 60 * i)
                 };
 
-                Controls.Add(costLabels[i]);
-                Controls.Add(profitLabels[i]);
-                Controls.Add(costBoxes[i]);
-                Controls.Add(profitBoxes[i]);
+                Controls.Add(custoLabels[i]);
+                Controls.Add(lucroLabels[i]);
+                Controls.Add(custoBox[i]);
+                Controls.Add(lucroBox[i]);
+
+                // aqui segue a mesma lógica dos anteriores, é necessário para permitir que o
+                // usuário interaja e insira os valores desejados
             }
 
             calculateButton = new Button
@@ -205,16 +227,18 @@ class Program
                 DialogResult = DialogResult.OK
             };
 
-            calculateButton.Click += CalculateButton_Click;
+            calculateButton.Click += CalculateButton_Click; // o método CalculateButton_Click é chamado quando houver o
+                                                            // clique do usuário no botão
 
             Controls.Add(calculateButton);
         }
 
-        private void CalculateButton_Click(object sender, EventArgs e)
+        private void CalculateButton_Click(object sender, EventArgs e) //esses parametros são necessarios para lidar com eventos de clique no botão
         {
-            dishes = new int[n + 1, 2];
+            pratos = new int[n + 1, 2]; // aqui é criada uma matriz bidimensional com n + 1 linhas e duas colunas,
+                                        // para armazenar os custos e lucros dos pratos
 
-            CalculateMenu();
+            CalculateMenu();    // chama o método CalculateMenu
         }
     }
 }
