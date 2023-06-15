@@ -48,8 +48,16 @@ class Program
 
                     if (custo <= j && ultPrato[i - 1, j - custo] != prato) // verifica se é possível escolher o prato atual com o orçamento disponivel
                     {                                                       // e se ele não foi escolhido no dia anterior com o mesmo orçamento
-                        lucroMaxParc[i, j] = Math.Max(lucroMaxParc[i, j], lucroMaxParc[i - 1, j - custo] + lucro);
+                       
+                        //calcula-se o novo lucro máximo considerando duas situações:
+                        // - se o prato atual for escolhido, somamos o lucro do prato atual ao lucro máximo obtido no dia anterior com o orçamento
+                        // reduzido pelo custo do prato atual
+                        // - se o prato atual não for escolhido, mantemos o lucro máximo atual
 
+                        lucroMaxParc[i, j] = Math.Max(lucroMaxParc[i, j], lucroMaxParc[i - 1, j - custo] + lucro); 
+
+                        //verificamos se o novo lucro é maior que o lucro máximo atual, se sim, atualizamos o lucro máximo e definimos
+                        // como prato atual
                         if (lucroMaxParc[i, j] == lucroMaxParc[i - 1, j - custo] + lucro)
                         {
                             ultPrato[i, j] = prato;
@@ -60,29 +68,29 @@ class Program
             }
         }
 
-        double maxProfit = lucroMaxParc[k, m];
-        string resultado = $"Lucro total R${maxProfit:F1}\n";
+        double maxProfit = lucroMaxParc[k, m]; //atribui o valor do lucro máximo obtido para o último dia e orçamento disponível
+        string resultado = $"Lucro total R${maxProfit:F1}\n"; //armazena a mensagem a ser exibida
 
-        int[] menu = new int[k];
-        int orcamentoRestante = m;
-        int diaAtual = k;
+        int[] menu = new int[k];    //criado um array para armazenar os pratos escolhidos
+        int orcamentoRestante = m;  //valor total do orçamento disponivel
+        int diaAtual = k;           //valor total de dias
 
         
-        while (diaAtual > 0 && orcamentoRestante > 0)
+        while (diaAtual > 0 && orcamentoRestante > 0) // preenche o array com os pratos escolhidos
         {
-            int dish = ultPrato[diaAtual, orcamentoRestante];
-            menu[diaAtual - 1] = dish;
-            orcamentoRestante -= pratos[dish, 0];
-            diaAtual--;
+            int prato = ultPrato[diaAtual, orcamentoRestante]; // obtem o prato escolhido para o dia atual
+            menu[diaAtual - 1] = prato; 
+            orcamentoRestante -= pratos[prato, 0]; // O valor do custo do prato escolhido é subtraído do orçamento restante 
+            diaAtual--; //decrementa para passar para o próximo dia
         }
 
-        for (int i = 0; i < k; i++)
+        for (int i = 0; i < k; i++) // controi a string resultado adicionando uma linha para cada dia com o número do dia
         {
             resultado += $"Dia {i + 1}: Prato {menu[i]}\n";
         }
 
 
-        MessageBox.Show(resultado, "Resultado");
+        MessageBox.Show(resultado, "Resultado"); // por fim exibi uma mensagem com o resultado
     }
 
     public class MainForm : Form
